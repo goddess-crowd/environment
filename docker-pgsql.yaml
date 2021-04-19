@@ -1,0 +1,34 @@
+version: '3' # 表示该 Docker-Compose 文件使用的是 Version 3 file
+
+#volumes: # 卷挂载路径
+#  xxljob_mysql-vol: # xxl-job
+#  nacos_mysql-vol: # nacos
+#  redis_data-vol: # redis
+#  rocket_mq-vol: # rocket-mq
+#  elastic_search-vol: # es
+
+services:
+
+#  ######################################################################################################  用户中心pgsql 开始
+  postgres_user:
+    hostname: postgres_user
+    container_name: postgres_user
+    image: postgres:11-alpine
+    shm_size: 1600M
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: goddess_root
+      TZ: Asia/Shanghai
+    ##restart: always
+    volumes:
+      - ./env/pgsql/data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+#  ######################################################################################################  用户中心pgsql 结束
+networks:
+  extnetwork:
+    name: goodess_net  #网络名称
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16 # 网络号段
+          gateway: 172.18.0.1 # 网关地址

@@ -1,0 +1,54 @@
+version: '3' # 表示该 Docker-Compose 文件使用的是 Version 3 file
+
+#volumes: # 卷挂载路径
+#  xxljob_mysql-vol: # xxl-job
+#  nacos_mysql-vol: # nacos
+#  redis_data-vol: # redis
+#  rocket_mq-vol: # rocket-mq
+#  elastic_search-vol: # es
+
+services:
+
+  ######################################################################################################    xxljob 开始
+  xxljob:
+    image: xuxueli/xxl-job-admin:2.3.0
+    container_name: xxljob
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://xxljob_mysql:3306/xxl_job?Unicode=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: goddess_root
+      TZ: Asia/Shanghai
+    ports:
+      - "8080:8080"
+    #restart: always
+    depends_on:
+      - xxljob_mysql
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.4.2
+
+  xxljob_mysql:
+    image: mysql:5
+    container_name: xxljob_mysql
+    ports:
+      - "3317:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: goddess_root
+      MYSQL_DATABASE: xxl_job
+      TZ: Asia/Shanghai
+    volumes:
+      - ./env/xxljob/mysql/:/var/lib/mysql
+      - ./env/xxljob/tables_xxl_job.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.4.3
+  ######################################################################################################    xxljob 结束
+networks:
+  extnetwork:
+    name: goodess_net  #网络名称
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16 # 网络号段
+          gateway: 172.18.0.1 # 网关地址

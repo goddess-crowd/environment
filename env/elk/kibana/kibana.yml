@@ -1,0 +1,6 @@
+server.name: elk_kibana
+server.host: "0"
+#这里写你的es第一个node的地址
+elasticsearch.hosts: [ "http://172.18.6.2:9200" ]
+xpack.monitoring.ui.container.elasticsearch.enabled: true
+i18n.locale: zh-CN

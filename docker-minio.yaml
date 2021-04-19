@@ -1,0 +1,81 @@
+version: '3' # 表示该 Docker-Compose 文件使用的是 Version 3 file
+
+#volumes: # 卷挂载路径
+#  xxljob_mysql-vol: # xxl-job
+#  nacos_mysql-vol: # nacos
+#  redis_data-vol: # redis
+#  rocket_mq-vol: # rocket-mq
+#  elastic_search-vol: # es
+
+services:
+
+  ###################################################################################################### minio集群 开始
+  minio1:
+    image: minio/minio:RELEASE.2021-04-06T23-11-00Z
+    hostname: minio1
+    container_name: minio1
+    volumes:
+      - ./env/minio/minio1/data1:/data1
+      - ./env/minio/minio1/data2:/data2
+    ports:
+      - "9002:9000"
+    command: server http://minio{1...2}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 2
+    env_file:
+      - ./env/minio/minio.env
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.2.5
+
+  minio2:
+    image: minio/minio:RELEASE.2021-04-06T23-11-00Z
+    hostname: minio2
+    container_name: minio2
+    volumes:
+      - ./env/minio/minio2/data1:/data1
+      - ./env/minio/minio2/data2:/data2
+    ports:
+      - "9001:9000"
+    command: server http://minio{1...2}/data{1...2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 2
+    env_file:
+      - ./env/minio/minio.env
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.2.4
+
+  minio_nginx:
+    image: nginx:1.19.2-alpine
+    hostname: minio_nginx
+    container_name: minio_nginx
+    volumes:
+      - ./env/minio/nginx/nginx.conf:/etc/nginx/nginx.conf
+#      - ./env/minio/nginx/log:/var/log/nginx
+    ports:
+      - "9000:80"
+    depends_on:
+      - minio1
+      - minio2
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.2.2
+  ###################################################################################################### minio集群 结束
+
+networks:
+  extnetwork:
+    name: goodess_net  #网络名称
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16 # 网络号段
+          gateway: 172.18.0.1 # 网关地址

@@ -1,0 +1,119 @@
+version: '3' # 表示该 Docker-Compose 文件使用的是 Version 3 file
+
+#volumes: # 卷挂载路径
+#  xxljob_mysql-vol: # xxl-job
+#  nacos_mysql-vol: # nacos
+#  redis_data-vol: # redis
+#  rocket_mq-vol: # rocket-mq
+#  elastic_search-vol: # es
+
+services:
+
+  ######################################################################################################    es集群 开始
+  elasticsearch_0:
+    image: elasticsearch:7.6.2
+    container_name: elasticsearch_0
+    privileged: true
+    environment:
+      - cluster.name=elasticsearch-cluster
+      - node.name=node0
+      - node.master=true
+      - node.data=true
+      - bootstrap.memory_lock=true
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - cluster.initial_master_nodes=node0
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch_0,elasticsearch_1"
+      - "discovery.zen.minimum_master_nodes=2"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./env/es/etc/localtime:/etc/localtime
+      - ./env/es/node0/data:/usr/share/elasticsearch/data
+#      - ./env/es/node0/logs:/usr/share/elasticsearch/logs
+    ports:
+      - 9201:9200
+      - 9301:9300
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.3.5
+
+  elasticsearch_1:
+    image: elasticsearch:7.6.2
+    container_name: elasticsearch_1
+    privileged: true
+    environment:
+      - cluster.name=elasticsearch-cluster
+      - node.name=node1
+      - node.master=true
+      - node.data=true
+      - bootstrap.memory_lock=true
+      - http.cors.enabled=true
+      - http.cors.allow-origin=*
+      - cluster.initial_master_nodes=node0
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch_0,elasticsearch_1"
+      - "discovery.zen.minimum_master_nodes=2"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./env/es/etc/localtime:/etc/localtime
+      - ./env/es/node1/data:/usr/share/elasticsearch/data
+#      - ./env/es/node1/logs:/usr/share/elasticsearch/logs
+    ports:
+      - 9202:9200
+      - 9302:9300
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.3.4
+
+  elasticsearch_kibana:
+    image: kibana:7.6.2
+    hostname: elasticsearch_kibana
+    container_name: elasticsearch_kibana
+    ports:
+      - 5602:5601
+    volumes:
+      - ./env/es/etc/localtime:/etc/localtime
+      - ./env/es/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+    depends_on:
+      - elasticsearch_0
+      - elasticsearch_1
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.3.2
+
+  elasticsearch_nginx:
+    image: nginx:1.19.2-alpine
+    hostname: elasticsearch_nginx
+    container_name: elasticsearch_nginx
+    volumes:
+      - ./env/es/etc/localtime:/etc/localtime
+      - ./env/es/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./env/es/nginx/log:/var/log/nginx
+    ports:
+      - "9200:80"
+    depends_on:
+      - elasticsearch_0
+      - elasticsearch_1
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.3.9
+  ######################################################################################################    es集群 结束
+
+networks:
+  extnetwork:
+    name: goodess_net  #网络名称
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16 # 网络号段
+          gateway: 172.18.0.1 # 网关地址

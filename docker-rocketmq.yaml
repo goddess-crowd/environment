@@ -1,0 +1,98 @@
+version: '3.5'
+services:
+
+  ######################################################################################################    rocketMQ 开始
+  rmq_namesrv_a:
+    image: rocketmqinc/rocketmq
+    container_name: rmq_namesrv_a
+    ports:
+      - 9876:9876
+    volumes:
+#      - ./env/rocketmq/logs/nameserver-a:/opt/logs
+      - ./env/rocketmq/store/nameserver-a:/opt/store
+    command: sh mqnamesrv
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.7.11
+  rmq_namesrv_b:
+    image: rocketmqinc/rocketmq
+    container_name: rmq_namesrv_b
+    ports:
+      - 9877:9876
+    volumes:
+#      - ./env/rocketmq/logs/nameserver-b:/opt/logs
+      - ./env/rocketmq/store/nameserver-b:/opt/store
+    command: sh mqnamesrv
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.7.12
+
+  rmq_broker_a:
+    image: rocketmqinc/rocketmq
+    container_name: rmq_broker_a
+    ports:
+      - 10911:10911
+      - 10910:10910
+      - 10909:10909
+    volumes:
+#      - ./env/rocketmq/logs/broker-a:/opt/logs
+      - ./env/rocketmq/store/broker-a:/opt/store
+      - ./env/rocketmq/conf/broker-a.conf:/opt/rocketmq-4.5.0/conf/broker.conf
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "172.18.7.12:9876;172.18.7.11:9876"
+      JAVA_OPTS: "-Duser.home=/opt"
+      JAVA_OPT_EXT: "-Xms256m -Xmx256m"
+    command: sh mqbroker -c /opt/rocketmq-4.5.0/conf/broker.conf autoCreateTopicEnable=true &
+    depends_on:
+      - rmq_namesrv_a
+      - rmq_namesrv_b
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.7.21
+
+  rmq_broker_b:
+    image: rocketmqinc/rocketmq
+    container_name: rmq_broker_b
+    ports:
+      - 10921:10921
+      - 10920:10920
+      - 10919:10919
+    volumes:
+#      - ./env/rocketmq/logs/broker-b:/opt/logs
+      - ./env/rocketmq/store/broker-b:/opt/store
+      - ./env/rocketmq/conf/broker-b.conf:/opt/rocketmq-4.5.0/conf/broker.conf
+    environment:
+      TZ: Asia/Shanghai
+      NAMESRV_ADDR: "172.18.7.12:9876;172.18.7.11:9876"
+      JAVA_OPTS: "-Duser.home=/opt"
+      JAVA_OPT_EXT: "-Xms256m -Xmx256m"
+    command: sh mqbroker -c /opt/rocketmq-4.5.0/conf/broker.conf autoCreateTopicEnable=true &
+    depends_on:
+      - rmq_namesrv_a
+      - rmq_namesrv_b
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.7.22
+
+  rmq_console:
+    image: styletang/rocketmq-console-ng
+    container_name: rmq_console
+    ports:
+      - 10001:9001
+    environment:
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=rmq_namesrv_a:9876;rmq_namesrv_b:9877 -Dcom.rocketmq.sendMessageWithVIPChannel=false -Dserver.port=9001"
+    depends_on:
+      - rmq_broker_a
+      - rmq_broker_b
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.7.1
+  ######################################################################################################    rocketMQ 结束
+networks:
+  extnetwork:
+    name: goodess_net  #网络名称
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16 # 网络号段
+          gateway: 172.18.0.1 # 网关地址

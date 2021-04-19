@@ -1,0 +1,160 @@
+version: '3' # 表示该 Docker-Compose 文件使用的是 Version 3 file
+
+#volumes: # 卷挂载路径
+#  xxljob_mysql-vol: # xxl-job
+#  nacos_mysql-vol: # nacos
+#  redis_data-vol: # redis
+#  rocket_mq-vol: # rocket-mq
+#  elastic_search-vol: # es
+
+services:
+  redis_single:
+    image: redis:5
+    container_name: redis_single
+    ports:
+      - 6379:6379
+    command:
+        redis-server --requirepass root
+    volumes:
+#      - ./env/redis/single/master/conf/redis.conf:/etc/redis/redis.conf
+      - ./env/redis/single/master/data:/data
+    #restart: always
+    networks:
+      extnetwork:
+        ipv4_address: 172.18.5.2
+#  ######################################################################################################    Redis集群 开始
+#  redis_master1:
+#    image: redis:5-alpine
+#    container_name: redis_cluster1_master
+#    ports:
+#      - 6381:6379
+##      - 16381:16379
+#    command:
+#      - sh
+#      - -c
+#      - |
+#        redis-server /etc/redis/redis.conf
+#    volumes:
+#      - ./env/redis/cluster1/master/conf/redis.conf:/etc/redis/redis.conf
+#      - ./env/redis/cluster1/master/data:/data
+#      - ./env/redis/rc.local:/etc/rc.local
+##      - ./env/redis/nodes.conf:/data/nodes.conf
+#    #restart: always
+#    networks:
+#      extnetwork:
+#        ipv4_address: 172.18.5.81
+#
+#  redis_follow1:
+#    image: redis:5-alpine
+#    container_name: redis_cluster1_follower
+#    ports:
+#      - 6382:6379
+##      - 16382:16379
+#    command:
+#      - sh
+#      - -c
+#      - |
+#        echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+#        redis-server /etc/redis/redis.conf
+#    volumes:
+#      - ./env/redis/cluster1/follower/conf/redis.conf:/etc/redis/redis.conf
+#      - ./env/redis/cluster1/follower/data:/data
+##      - ./env/redis/nodes.conf:/data/nodes.conf
+#    #restart: always
+#    networks:
+#      extnetwork:
+#        ipv4_address: 172.18.5.82
+#
+#  redis_master2:
+#    image: redis:5-alpine
+#    container_name: redis_cluster2_master
+#    ports:
+#      - 6383:6379
+##      - 16383:16379
+#    command:
+#      - sh
+#      - -c
+#      - |
+#        echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+#        redis-server /etc/redis/redis.conf
+#    volumes:
+#      - ./env/redis/cluster2/master/conf/redis.conf:/etc/redis/redis.conf
+#      - ./env/redis/cluster2/master/data:/data
+##      - ./env/redis/nodes.conf:/data/nodes.conf
+#    #restart: always
+#    networks:
+#      extnetwork:
+#        ipv4_address: 172.18.5.83
+#
+#  redis_follow2:
+#    image: redis:5-alpine
+#    container_name: redis_cluster2_follower
+#    ports:
+#      - 6384:6379
+##      - 16384:16379
+#    command:
+#      - sh
+#      - -c
+#      - |
+#        echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+#        redis-server /etc/redis/redis.conf
+#    volumes:
+#      - ./env/redis/cluster2/follower/conf/redis.conf:/etc/redis/redis.conf
+#      - ./env/redis/cluster2/follower/data:/data
+##      - ./env/redis/nodes.conf:/data/nodes.conf
+#    #restart: always
+#    networks:
+#      extnetwork:
+#        ipv4_address: 172.18.5.84
+#
+#  redis_master3:
+#    image: redis:5-alpine
+#    container_name: redis_cluster3_master
+#    ports:
+#      - 6385:6379
+##      - 16385:16379
+#    command:
+#      - sh
+#      - -c
+#      - |
+#        echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+#        redis-server /etc/redis/redis.conf
+#    volumes:
+#      - ./env/redis/cluster3/master/conf/redis.conf:/etc/redis/redis.conf
+#      - ./env/redis/cluster3/master/data:/data
+##      - ./env/redis/nodes.conf:/data/nodes.conf
+#    #restart: always
+#    networks:
+#      extnetwork:
+#        ipv4_address: 172.18.5.85
+#
+#  redis_follow3:
+#    image: redis:5-alpine
+#    container_name: redis_cluster3_follower
+#    ports:
+#      - 6386:6379
+##      - 16386:16379
+#    command:
+#      - sh
+#      - -c
+#      - |
+#        echo never > /sys/kernel/mm/redhat_transparent_hugepage/enabled
+#        redis-server /etc/redis/redis.conf
+##        sudo echo y | redis-cli -a root --cluster create 172.18.5.4:6379 172.18.5.6:6379 172.18.5.8:6379 172.18.5.3:6379 172.18.5.5:6379 172.18.5.7:6379 --cluster-replicas 1
+#    volumes:
+#      - ./env/redis/cluster3/follower/conf/redis.conf:/etc/redis/redis.conf
+#      - ./env/redis/cluster3/follower/data:/data
+##      - ./env/redis/nodes.conf:/data/nodes.conf
+#    #restart: always
+#    networks:
+#      extnetwork:
+#        ipv4_address: 172.18.5.86
+#  ######################################################################################################    Redis集群 结束
+
+networks:
+  extnetwork:
+    name: goodess_net  #网络名称
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16 # 网络号段
+          gateway: 172.18.0.1 # 网关地址
